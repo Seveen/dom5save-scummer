@@ -4,7 +4,7 @@ use druid::im::{Vector, vector};
 use druid::widget::{Button, Either, Flex, Label, List, Painter, Scroll, Spinner};
 use druid::{
     AppDelegate, AppLauncher, Color, Command, Data, DelegateCtx, Env, ExtEventSink, Handled, Lens,
-    RenderContext, Selector, Target, UnitPoint, Widget, WidgetExt, WindowDesc, FileDialogOptions,
+    RenderContext, Selector, Target, UnitPoint, Widget, WidgetExt, WindowDesc, FileDialogOptions, Insets,
 };
 use file_system::*;
 use std::path::PathBuf;
@@ -238,13 +238,12 @@ fn build_ui() -> impl Widget<State> {
     );
 
     let mut button_column = Flex::column();
-    button_column.add_flex_child(either_archiving, 1.0);
-    button_column.add_flex_child(either_restoring, 1.0);
+    button_column.add_flex_child(either_archiving.padding(Insets::uniform_xy(32.0, 8.0)), 1.0);
+    button_column.add_flex_child(either_restoring.padding(Insets::uniform_xy(32.0, 8.0)), 1.0);
 
     container.add_flex_child(
         button_column
-            .align_vertical(UnitPoint::CENTER)
-            .expand_height(),
+            .align_vertical(UnitPoint::CENTER),
         1.0,
     );
 
