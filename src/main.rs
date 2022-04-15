@@ -1,10 +1,11 @@
 use anyhow::Result;
-use druid::commands::{SHOW_OPEN_PANEL, self};
-use druid::im::{Vector, vector};
-use druid::widget::{Button, Either, Flex, Label, List, Painter, Scroll, Spinner};
+use druid::commands::{self, SHOW_OPEN_PANEL};
+use druid::im::{vector, Vector};
+use druid::widget::{Button, Either, Flex, Label, List, Painter, Scroll, Spinner, MainAxisAlignment};
 use druid::{
-    AppDelegate, AppLauncher, Color, Command, Data, DelegateCtx, Env, ExtEventSink, Handled, Lens,
-    RenderContext, Selector, Target, UnitPoint, Widget, WidgetExt, WindowDesc, FileDialogOptions, Insets,
+    AppDelegate, AppLauncher, Color, Command, Data, DelegateCtx, Env, ExtEventSink,
+    FileDialogOptions, Handled, Insets, Lens, RenderContext, Selector, Target, UnitPoint, Widget,
+    WidgetExt, WindowDesc,
 };
 use file_system::*;
 use std::path::PathBuf;
@@ -47,10 +48,13 @@ impl AppDelegate<State> for Delegate {
         } else if let Some(file_info) = cmd.get(commands::OPEN_FILE) {
             if let Some(path) = file_info.path().to_str() {
                 data.saved_games_path = Some(String::from(path));
-                save_saved_games_dir_in_config(path).expect("Failed to save savedgames dir to config file");
+                save_saved_games_dir_in_config(path)
+                    .expect("Failed to save savedgames dir to config file");
                 start_saved_games_watcher(ctx.get_external_handle(), String::from(path));
-                data.saved_games = list_games(&PathBuf::from(path)).expect("Failed to list saved games");
-                data.archived_games = list_games(&PathBuf::from(&data.archived_games_path)).expect("Failed to list archived games");
+                data.saved_games =
+                    list_games(&PathBuf::from(path)).expect("Failed to list saved games");
+                data.archived_games = list_games(&PathBuf::from(&data.archived_games_path))
+                    .expect("Failed to list archived games");
             }
             Handled::Yes
         } else {
@@ -64,29 +68,27 @@ fn main() {
     let launcher = AppLauncher::<State>::with_window(window).delegate(Delegate {});
 
     match get_initial_state() {
-        Ok(state) => {
-            match state.saved_games_path.clone() {
-                Some(saved_games_path) => {
-                    let archived_games_path = state.archived_games_path.clone();
+        Ok(state) => match state.saved_games_path.clone() {
+            Some(saved_games_path) => {
+                let archived_games_path = state.archived_games_path.clone();
 
-                    let event_sink = launcher.get_external_handle();
-                    start_saved_games_watcher(event_sink, saved_games_path);
+                let event_sink = launcher.get_external_handle();
+                start_saved_games_watcher(event_sink, saved_games_path);
 
-                    let event_sink = launcher.get_external_handle();
-                    start_archived_games_watcher(event_sink, archived_games_path);
+                let event_sink = launcher.get_external_handle();
+                start_archived_games_watcher(event_sink, archived_games_path);
 
-                    launcher.log_to_console().launch(state).unwrap();
-                }
-                None => {
-                    let archived_games_path = state.archived_games_path.clone();
-
-                    let event_sink = launcher.get_external_handle();
-                    start_archived_games_watcher(event_sink, archived_games_path);
-
-                    launcher.log_to_console().launch(state).unwrap();
-                },
+                launcher.log_to_console().launch(state).unwrap();
             }
-        }
+            None => {
+                let archived_games_path = state.archived_games_path.clone();
+
+                let event_sink = launcher.get_external_handle();
+                start_archived_games_watcher(event_sink, archived_games_path);
+
+                launcher.log_to_console().launch(state).unwrap();
+            }
+        },
         Err(_) => {
             println!("Failed to load initial state");
         }
@@ -107,9 +109,8 @@ fn start_saved_games_watcher(event_sink: ExtEventSink, saved_games_path: String)
 fn start_archived_games_watcher(event_sink: ExtEventSink, archived_games_path: String) {
     thread::spawn(move || {
         watch_filesystem(event_sink, &archived_games_path, move |data: &mut State| {
-            data.archived_games =
-                list_games(&PathBuf::from(data.archived_games_path.clone()))
-                    .expect("Failed to list archived games in watcher");
+            data.archived_games = list_games(&PathBuf::from(data.archived_games_path.clone()))
+                .expect("Failed to list archived games in watcher");
         })
     });
 }
@@ -124,7 +125,7 @@ fn get_initial_state() -> Result<State> {
             if saved_games_dir.exists() {
                 let saved_games = list_games(saved_games_dir.as_path())?;
                 let archived_games = list_games(archived_games_dir.as_path())?;
-    
+
                 let state = State {
                     saved_games_path: Some(saved_games_dir.display().to_string()),
                     archived_games_path: archived_games_dir.display().to_string(),
@@ -135,7 +136,7 @@ fn get_initial_state() -> Result<State> {
                     archiving: false,
                     restoring: false,
                 };
-    
+
                 Ok(state)
             } else {
                 let state = State {
@@ -148,9 +149,9 @@ fn get_initial_state() -> Result<State> {
                     archiving: false,
                     restoring: false,
                 };
-    
+
                 Ok(state)
-            }            
+            }
         }
         Err(e) => Err(e),
     }
@@ -237,15 +238,11 @@ fn build_ui() -> impl Widget<State> {
             .expand_width(),
     );
 
-    let mut button_column = Flex::column();
+    let mut button_column = Flex::column().main_axis_alignment(MainAxisAlignment::SpaceEvenly);
     button_column.add_flex_child(either_archiving.padding(Insets::uniform_xy(32.0, 8.0)), 1.0);
     button_column.add_flex_child(either_restoring.padding(Insets::uniform_xy(32.0, 8.0)), 1.0);
 
-    container.add_flex_child(
-        button_column
-            .align_vertical(UnitPoint::CENTER),
-        1.0,
-    );
+    container.add_flex_child(button_column, 1.0);
 
     container.add_flex_child(
         list((State::selected_archived_game, State::archived_games)).expand_width(),
