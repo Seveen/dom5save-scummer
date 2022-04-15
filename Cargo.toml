@@ -1,0 +1,13 @@
+[package]
+name = "dom-save-scummer"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+druid = { git = "https://github.com/linebender/druid.git", features = ["im"] }
+druid-widget-nursery = { git = "https://github.com/linebender/druid-widget-nursery" }
+anyhow = "1.0"
+directories = "4.0.1"
+notify = "4.0.17"
