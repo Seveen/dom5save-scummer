@@ -22,5 +22,3 @@ jobs:
       run: cargo build --release --verbose
     - name: Run tests
       run: cargo test --verbose
-    - name: Download a Build Artifact
-      uses: actions/download-artifact@v3.0.0
